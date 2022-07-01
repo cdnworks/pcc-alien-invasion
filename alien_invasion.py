@@ -15,9 +15,15 @@ def run_game():
 
     # Create the player ship
     ship = Ship(ai_settings, screen)
+
+    # Make a group of aliens, and populate the group
+    aliens = Group()
+    gf.create_fleet(ai_settings, screen, aliens)
+
     # Bullets are pygame Sprites, so we can manage them as a 'Group'
     # Create a group to store bullets in
     bullets = Group()
+
 
     # Start the game loop
     while True:
@@ -30,7 +36,7 @@ def run_game():
         
 
         # Redraw the screen during each pass
-        gf.update_screen(ai_settings, screen, ship, bullets)
+        gf.update_screen(ai_settings, screen, ship, aliens, bullets)
 
 
 run_game()
