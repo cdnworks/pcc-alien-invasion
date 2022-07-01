@@ -31,7 +31,7 @@ class Ship():
         self.moving_left = False
 
 
-    def update_position(self):
+    def update(self):
         '''
         Update the ship's position based on the movement flags' status
         '''
