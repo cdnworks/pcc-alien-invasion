@@ -1,4 +1,5 @@
 import sys
+from time import sleep
 
 import pygame
 
@@ -60,16 +61,27 @@ def update_screen(ai_settings, screen, ship, aliens, bullets):
     # Make the most recently drawn screen visible
     pygame.display.flip()
 
-def update_bullets(bullets):
+def update_bullets(ai_settings, screen, ship, aliens, bullets):
     '''
     Update the position of all bullets in the group, and clear old bullets
     '''
     bullets.update()
-
     # Clear bullets that have gone past the top of the screen
     for bullet in bullets.copy():
         if bullet.rect.bottom <= 0:
             bullets.remove(bullet)
+    check_bullet_alien_collisions(ai_settings, screen, ship, aliens, bullets)
+
+def check_bullet_alien_collisions(ai_settings, screen, ship, aliens, bullets):
+    ''' Respond to bullet-alien collisions'''
+    # Check if any bullets hit an alien
+    collisions = pygame.sprite.groupcollide(bullets, aliens,
+                                ai_settings.bullets_destroyed_on_hit, True)
+    # Respawn aliens if the group has been destroyed
+    if len(aliens) == 0:
+        # Destroy existing bullets too
+        bullets.empty()
+        create_fleet(ai_settings, screen, ship, aliens)
 
 def fire_bullet(ai_settings, screen, ship, bullets):
     '''
@@ -87,22 +99,88 @@ def get_number_aliens_x(ai_settings, alien_width):
     number_aliens_x = int(available_space_x / (2 * alien_width))
     return number_aliens_x
 
-def create_alien(ai_settings, screen, aliens, alien_number):
+def get_number_rows(ai_settings, ship_height, alien_height):
+    '''Determine the number of rows of aliens that fit on the screen.'''
+    available_space_y = (ai_settings.screen_height - 
+                            (3* alien_height) - ship_height)
+    number_rows = int(available_space_y/(2* alien_height))
+    return number_rows
+
+def create_alien(ai_settings, screen, aliens, alien_number, row_number):
     '''Create an alien and place it in the row.'''
     alien = Alien(ai_settings, screen)
     alien_width = alien.rect.width
     alien.x = alien_width + 2 * alien_width * alien_number
     alien.rect.x = alien.x
+    alien.rect.y = alien.rect.height + 2 * alien.rect.height * row_number
     aliens.add(alien)
 
-def create_fleet(ai_settings, screen, aliens):
+def create_fleet(ai_settings, screen, ship, aliens):
     '''Fill the screen with aliens'''
     # Create an alien and find the number of aliens in a row. (based on screen)
     # Spacing between each alien is equal to one alien width.
     alien = Alien(ai_settings, screen)
     number_aliens_x = get_number_aliens_x(ai_settings, alien.rect.width)
+    number_rows = get_number_rows(ai_settings, ship.rect.height,
+        alien.rect.height)
 
-    # Create the first row of aliens
-    for alien_number in range(number_aliens_x):
-        #Create an alien and place it in the row
-        create_alien(ai_settings, screen, aliens, alien_number)
+    # Create the fleet of aliens
+    for row_number in range(number_rows):
+        for alien_number in range(number_aliens_x):
+            #Create an alien and place it in the row
+            create_alien(ai_settings, screen, aliens, alien_number, row_number)
+
+def check_fleet_edges(ai_settings, aliens):
+    ''' Respond if any aliens have reached an edge of the screen surface'''
+    for alien in aliens.sprites():
+        if alien.check_edges():
+            change_fleet_direction(ai_settings, aliens)
+            break
+
+def change_fleet_direction(ai_settings, aliens):
+    ''' Make the fleet descend a row, and change direction'''
+    for alien in aliens.sprites():
+        alien.rect.y += ai_settings.fleet_drop_speed
+    ai_settings.fleet_direction *= -1
+
+def ship_hit(ai_settings, stats, screen, ship, aliens, bullets):
+    ''' Respond to the player shit being hit by an anlien'''
+    if stats.ships_left > 0:
+        stats.ships_left -= 1
+        # Clear the game screen
+        aliens.empty()
+        bullets.empty()
+        # Create a new alien group and center the ship respawn
+        create_fleet(ai_settings, screen, ship, aliens)
+        ship.center_ship()
+
+        # Pause the game momentarily
+        sleep(ai_settings.reset_timer)
+    
+    else:
+        stats.game_active = False
+
+def check_aliens_bottom(ai_settings, stats, screen, ship, aliens, bullets):
+    ''' Check if an alien has hit the bottom of the screen'''
+    screen_rect = screen.get_rect()
+    for alien in aliens.sprites():
+        if alien.rect.bottom >= screen_rect.bottom:
+            # Treat this the same as if the ship got hit.
+            ship_hit(ai_settings, stats, screen, ship, aliens, bullets)
+            break
+
+def update_aliens(ai_settings, stats, screen, ship, aliens, bullets):
+    '''
+    Check if the fleet is at the screen edge,
+    If it is, update the positions of all the aliens in the group
+    '''
+    check_fleet_edges(ai_settings, aliens)
+    aliens.update()
+
+    # Check for alien and player ship collisions
+    # The dokill flag is set to false because we handle it in ship_hit
+    if pygame.sprite.spritecollide(ship, aliens, False):
+        ship_hit(ai_settings, stats, screen, ship, aliens, bullets)
+
+    # Look for aliens hitting the bottom of the screen.
+    check_aliens_bottom(ai_settings, stats, screen, ship, aliens, bullets)

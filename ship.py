@@ -49,3 +49,7 @@ class Ship():
         Draw the ship.bmp at it's current location, i.e. wherever it's rect is
         '''
         self.screen.blit(self.image, self.rect)
+
+    def center_ship(self):
+        ''' Center the ship on the screen'''
+        self.center = self.screen_rect.centerx
