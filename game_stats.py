@@ -7,8 +7,11 @@ class GameStats():
     def __init__(self, ai_settings):
         self.ai_settings = ai_settings
         self.reset_stats()
-        self.game_active = True
+
+        # The game starts in an inactive state
+        self.game_active = False
 
     def reset_stats(self):
         '''initialize tracked statistics here'''
         self.ships_left = self.ai_settings.ship_limit
+        self.score = 0 # Initialized here so it resets every new game
