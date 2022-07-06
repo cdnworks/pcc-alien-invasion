@@ -38,7 +38,7 @@ def run_game():
     # Start the game loop
     while True:
         # Set up event listeners defined in game_functions
-        gf.check_events(ai_settings, screen, stats, ship, aliens, bullets, 
+        gf.check_events(ai_settings, screen, stats, sb, ship, aliens, bullets, 
             play_button)
 
         # If the game is still valid:
@@ -46,8 +46,9 @@ def run_game():
             # Update object states
             ship.update()
             gf.update_bullets(ai_settings, screen, stats, sb, ship, 
-            aliens, bullets)
-            gf.update_aliens(ai_settings, stats, screen, ship, aliens, bullets)
+                aliens, bullets)
+            gf.update_aliens(ai_settings, stats, screen, sb, ship, aliens, 
+                bullets)
         
 
         # Redraw the screen during each pass

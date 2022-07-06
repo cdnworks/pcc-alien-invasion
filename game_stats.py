@@ -8,6 +8,9 @@ class GameStats():
         self.ai_settings = ai_settings
         self.reset_stats()
 
+        # High score shouldnt be reset
+        self.high_score = 0
+
         # The game starts in an inactive state
         self.game_active = False
 
@@ -15,3 +18,4 @@ class GameStats():
         '''initialize tracked statistics here'''
         self.ships_left = self.ai_settings.ship_limit
         self.score = 0 # Initialized here so it resets every new game
+        self.level = 1

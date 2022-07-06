@@ -1,7 +1,9 @@
 from turtle import screensize
 import pygame
+from pygame.sprite import Sprite 
+# we inherit Sprite so we can create groups of ships. Useful for UI things
 
-class Ship():
+class Ship(Sprite):
     '''
     This class manages the properties and behaviors of the player's
     ship in the game.
@@ -10,6 +12,8 @@ class Ship():
         '''
         Initialize the ship and set it's starting location on the screen
         '''
+        super().__init__()
+
         self.screen = screen
         self.ai_settings = ai_settings
 
